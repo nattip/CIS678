@@ -1,0 +1,43 @@
+Make sure that the github repository has a ".gitignore", you can check this by running:
+- find . -name ".gitignore"
+- If nothing comes up, run this command:
+	- touch .gitignore && echo "venv/" >> .gitignore
+
+Make a virtual environment
+
+- virtualenv -p `which python3` venv
+
+Activate virtual environment
+
+- source venv/bin/activate
+
+Install
+
+- pip install <package name>
+
+Save the packages
+
+- pip freeze > requirements.txt
+
+----------------------------------
+
+Picking up where you left off
+
+- cd <directory_of_venv>, this is the directory you were working in before
+- ls -al, you should see venv pop up
+
+Activate virtual environment
+
+- source venv/bin/activate
+
+If not found, do this:
+
+++	Make a virtual environment 
+++	- virtualenv -p `which python3` venv
+This will get you back up and running....
+
+Sometimes, you need to get the packages again
+
+- pip install -r requirements.txt
+
+You only need to do this if you had to re-make the virtual environment
