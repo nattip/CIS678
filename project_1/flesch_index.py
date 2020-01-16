@@ -6,15 +6,19 @@ import matplotlib.pyplot as plt
 # determine the number of sentences, words, and syllables in a string
 # and calculate the flesch index and resulting reading grade level
 def flesch_index(text):
+
+    # new word every time there is a space or a new line
     words = text.count(' ') + text.count('\n') - text.count('\n\n')
 
-    #if it has some letter before it would help when you see . . . 
+    # new sentence every time there is a . ! or ? followed by a space or new line
+    # if it has some letter before it would help when you see . . . 
     sentences = text.count('. ') + text.count('.\n') + text.count('! ') + text.count('!\n') + text.count('? ') + text.count('?\n')
 
     vowels = "aeiouy"
 
     syllables = 0
 
+    # new syllable every time a letter starts with a vowel or a vowel follows a consonant
     for word in text.split():
         word = word.lower()
         if word[0] in vowels:
@@ -25,6 +29,7 @@ def flesch_index(text):
         if word.endswith('e'):
             syllables -= 1
 
+    # calculate flesch-kincaid index and corresponding grade level
     flesch = 206.835 - 84.6 * (syllables / words) - 1.015 * (words / sentences)
     grade = round(0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59)
 
@@ -32,6 +37,7 @@ def flesch_index(text):
 
 ##########################################################################
 
+# open each file and run calculations on it
 f = open('MobyDick.txt', 'r')
 text = f.read()
 words_moby, sentences_moby, syllables_moby, flesch_moby, grade_moby = flesch_index(text)
@@ -50,12 +56,14 @@ words_gettys, sentences_gettys, syllables_gettys, flesch_gettys, grade_gettys = 
 print("\nThe Gettysburg Address has",  sentences_gettys, "sentences,", words_gettys, "words, and", syllables_gettys, "syllables.")
 print("Its Flesch Index is", flesch_gettys, "and its reading grade level is", grade_gettys)
 
+# for simple plotting, combine flesch indexes, grades, and titles into lists
 flesch = [flesch_moby, flesch_nyt, flesch_gettys]
 grades = [grade_moby, grade_nyt, grade_gettys]
 titles = ('Moby Dick', 'NY Times', 'Gettysburg Address')
 
 yaxis = np.arange(len(titles))
 
+# subplots of flesch index and grade levels of each reading
 plt.figure(1)
 
 plt.subplot(211)
