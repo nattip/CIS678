@@ -1,3 +1,11 @@
+#########################
+# Title: Project 1 - Flesch Kincaid Index
+# Class: CIS 678 - Machine Learning
+# Professor: Dr. Wolffe
+# Date: January 16, 2020
+# Description: This program opens text files containing
+#   and calculates the Flesch Kincaid Index and 
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -10,9 +18,21 @@ def flesch_index(text):
     # new word every time there is a space or a new line
     words = text.count(' ') + text.count('\n') - text.count('\n\n')
 
+    sentences = 0
+
     # new sentence every time there is a . ! or ? followed by a space or new line
     # if it has some letter before it would help when you see . . . 
-    sentences = text.count('. ') + text.count('.\n') + text.count('! ') + text.count('!\n') + text.count('? ') + text.count('?\n')
+    for letter in range(0, len(text)-1):
+        if text[letter] == ('.' or '!' or '?'):
+            if text[letter - 1].isalpha():
+                if text[letter + 1] == (' ' or '\n'):
+                    sentences += 1
+
+    # add one sentence for the last sentence of the file
+    sentences += 1
+    
+    sentences2 = text.count('. ') + text.count('.\n') + text.count('! ') + text.count('!\n') + text.count('? ') + text.count('?\n')
+    print('originally', sentences2, 'sentences')
 
     vowels = "aeiouy"
 
