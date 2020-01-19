@@ -55,34 +55,28 @@ def flesch_index(text):
 ##########################################################################
 
 # open each file and run calculations on it
-f = open('MobyDick.txt', 'r')
+f = open('CommonSense.txt', 'r')
 text = f.read()
-words_moby, sentences_moby, syllables_moby, flesch_moby, grade_moby = flesch_index(text)
-print("\nMoby Dick has",  sentences_moby, "sentences,", words_moby, "words, and", syllables_moby, "syllables.")
-print("Its Flesch Index is", flesch_moby, "and its reading grade level is", grade_moby)
-
-f = open('NYTimes.txt', 'r')
-text = f.read()
-words_nyt, sentences_nyt, syllables_nyt, flesch_nyt, grade_nyt = flesch_index(text)
-print("\nThe NY Times article has",  sentences_nyt, "sentences,", words_nyt, "words, and", syllables_nyt, "syllables.")
-print("Its Flesch Index is", flesch_nyt, "and its reading grade level is", grade_nyt)
-
-f = open('GettysburgAddress.txt', 'r')
-text = f.read()
-words_gettys, sentences_gettys, syllables_gettys, flesch_gettys, grade_gettys = flesch_index(text)
-print("\nThe Gettysburg Address has",  sentences_gettys, "sentences,", words_gettys, "words, and", syllables_gettys, "syllables.")
-print("Its Flesch Index is", flesch_gettys, "and its reading grade level is", grade_gettys)
+words1, sentences1, syllables1, flesch1, grade1 = flesch_index(text)
+print("\nCommon Sense has",  sentences1, "sentences,", words1, "words, and", syllables1, "syllables.")
+print("Its Flesch Index is", flesch1, "and its reading grade level is", grade1)
 
 f = open('finalpaper.txt', 'r')
 text = f.read()
-words_paper, sentences_paper, syllables_paper, flesch_paper, grade_paper = flesch_index(text)
-print("\nMy Paper has",  sentences_paper, "sentences,", words_paper, "words, and", syllables_paper, "syllables.")
-print("Its Flesch Index is", flesch_paper, "and its reading grade level is", grade_paper)
+words2, sentences2, syllables2, flesch2, grade2 = flesch_index(text)
+print("\nMy paper has",  sentences2, "sentences,", words2, "words, and", syllables2, "syllables.")
+print("Its Flesch Index is", flesch2, "and its reading grade level is", grade2)
+
+f = open('TomSawyer.txt', 'r')
+text = f.read()
+words3, sentences3, syllables3, flesch3, grade3 = flesch_index(text)
+print("\nThe Adventures of Tom Sawyer has",  sentences3, "sentences,", words3, "words, and", syllables3, "syllables.")
+print("Its Flesch Index is", flesch3, "and its reading grade level is", grade3)
 
 # for simple plotting, combine flesch indexes, grades, and titles into lists
-flesch = [flesch_moby, flesch_nyt, flesch_gettys, flesch_paper]
-grades = [grade_moby, grade_nyt, grade_gettys, grade_paper]
-titles = ('Moby Dick', 'NY Times', 'Gettysburg Address', 'AFib Detection Using Entropy')
+flesch = [flesch1, flesch2, flesch3]
+grades = [grade1, grade2, grade3]
+titles = ('Common Sense', 'AFib Detection Using Entropy', 'Tom Sawyer')
 
 yaxis = np.arange(len(titles))
 
