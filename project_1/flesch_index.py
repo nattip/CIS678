@@ -21,18 +21,15 @@ def flesch_index(text):
     sentences = 0
 
     # new sentence every time there is a . ! or ? followed by a space or new line
-    # if it has some letter before it would help when you see . . . 
+    # with some letter in front of the punctuation 
     for letter in range(0, len(text)-1):
-        if text[letter] == ('.' or '!' or '?'):
+        if text[letter] == '.' or text[letter] == '!' or text[letter] == '?':
             if text[letter - 1].isalpha():
-                if text[letter + 1] == (' ' or '\n'):
+                if text[letter + 1] == ' ' or text[letter + 1] == '\n' or text[letter + 1] == '"':
                     sentences += 1
 
     # add one sentence for the last sentence of the file
     sentences += 1
-    
-    sentences2 = text.count('. ') + text.count('.\n') + text.count('! ') + text.count('!\n') + text.count('? ') + text.count('?\n')
-    print('originally', sentences2, 'sentences')
 
     vowels = "aeiouy"
 
@@ -76,10 +73,16 @@ words_gettys, sentences_gettys, syllables_gettys, flesch_gettys, grade_gettys = 
 print("\nThe Gettysburg Address has",  sentences_gettys, "sentences,", words_gettys, "words, and", syllables_gettys, "syllables.")
 print("Its Flesch Index is", flesch_gettys, "and its reading grade level is", grade_gettys)
 
+f = open('finalpaper.txt', 'r')
+text = f.read()
+words_paper, sentences_paper, syllables_paper, flesch_paper, grade_paper = flesch_index(text)
+print("\nMy Paper has",  sentences_paper, "sentences,", words_paper, "words, and", syllables_paper, "syllables.")
+print("Its Flesch Index is", flesch_paper, "and its reading grade level is", grade_paper)
+
 # for simple plotting, combine flesch indexes, grades, and titles into lists
-flesch = [flesch_moby, flesch_nyt, flesch_gettys]
-grades = [grade_moby, grade_nyt, grade_gettys]
-titles = ('Moby Dick', 'NY Times', 'Gettysburg Address')
+flesch = [flesch_moby, flesch_nyt, flesch_gettys, flesch_paper]
+grades = [grade_moby, grade_nyt, grade_gettys, grade_paper]
+titles = ('Moby Dick', 'NY Times', 'Gettysburg Address', 'AFib Detection Using Entropy')
 
 yaxis = np.arange(len(titles))
 
@@ -94,11 +97,10 @@ plt.ylabel('Reading Grade Level')
 
 plt.subplot(212)
 plt.bar(yaxis, flesch)
-plt.title('Flesch Index of Reading')
+plt.title('Flesch-Kincaid Index of Reading')
 plt.xticks(yaxis, titles)
 plt.ylabel('Flesch Index')
 plt.show()
-
 
 
 
