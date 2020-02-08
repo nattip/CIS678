@@ -53,9 +53,7 @@ def flesch_index(text):
 
     # calculate flesch-kincaid index and corresponding grade level
     flesch = 206.835 - 84.6 * (syllables / words) - 1.015 * (words / sentences)
-    grade = round(
-        0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59
-    )
+    grade = round(0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59)
 
     return words, sentences, syllables, flesch, grade
 
