@@ -1,7 +1,7 @@
 # Written by Natalie Tipton
 # February 2, 20202
 # CIS 678 - Machine Learning
-# Dr. Greg Wolfefe
+# Dr. Greg Wolffe
 # Spam/Ham Classification of text messages using
 #   the Naive Bayes algorithm
 

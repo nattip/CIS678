@@ -1,4 +1,4 @@
-Make sure that the github repository has a ".gitignore", you can check this by running:
+iMake sure that the github repository has a ".gitignore", you can check this by running:
 - find . -name ".gitignore"
 - If nothing comes up, run this command:
 	- touch .gitignore && echo "venv/" >> .gitignore
