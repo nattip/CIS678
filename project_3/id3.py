@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # Pandas dataframe to hold the dataset
     dataset = None
 
-    with open("data.txt") as f:
+    with open("fishing_data.txt") as f:
         # Get Output Classes
         # Gets the number of values
         classes["count"] = int(f.readline().rstrip())
@@ -39,9 +39,7 @@ if __name__ == "__main__":
 
         if attributes["count"] > 1:
             for i in range(attributes["count"]):
-                attributes["values"].append(
-                    f.readline().rstrip().split(",")[0]
-                )
+                attributes["values"].append(f.readline().rstrip().split(",")[0])
 
         # Make Dataset
         num_values = int(f.readline().rstrip())
@@ -65,5 +63,14 @@ if __name__ == "__main__":
     for attr in attributes["values"]:
         groups[attr] = pd.DataFrame(dataset.groupby([attr, "label"]).size())
         groups[attr].reset_index(inplace=True)
-    print(groups)
+    # print(groups)
+
+    d = DecisionTree(attributes, dataset, classes, groups)
+
+    print(d.groups)
+
+# calculate entropy for each factor of each individual attribute
+# calculate gain for each attribute
+# find largest gain
+# recurse and recalculate from dataset without data from given node
 
