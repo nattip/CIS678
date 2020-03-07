@@ -68,264 +68,129 @@ class DecisionTree:
         # pp.pprint(summed_values)
 
     def fit(self):
-        # for attr in self.summed_values:
-        #     for factor in attr:
-        #         for counts in factor:
+        entropy = {}
+        gain = {}
+        flag = 0
+        for attr in self.summed_values:
+            entropy[attr] = {}
+            gain[attr] = 0
+            for factor in range(0, len(self.summed_values[attr])):
 
-        ent_set = -(
-            (
-                self.summed_values["Air"]["Cool"]["No"]
-                + self.summed_values["Air"]["Warm"]["No"]
-            )
-            / num_values
-            * np.log2(
-                (
-                    self.summed_values["Air"]["Cool"]["No"]
-                    + self.summed_values["Air"]["Warm"]["No"]
+                if flag == 0:
+                    ent_set = -(
+                        (
+                            self.summed_values[attr][factor]["No"]
+                            + self.summed_values[attr][factor + 1]["No"]
+                        )
+                        / num_values
+                        * np.log2(
+                            (
+                                self.summed_values[attr][factor]["No"]
+                                + self.summed_values[attr][factor + 1]["No"]
+                            )
+                            / num_values
+                        )
+                        + (
+                            self.summed_values[attr][factor]["Yes"]
+                            + self.summed_values[attr][factor + 1]["Yes"]
+                        )
+                        / num_values
+                        * np.log2(
+                            (
+                                self.summed_values[attr][factor]["Yes"]
+                                + self.summed_values[attr][factor + 1]["Yes"]
+                            )
+                            / num_values
+                        )
+                    )
+
+                flag += 1
+
+                if self.summed_values[attr][factor].get("No") and self.summed_values[
+                    attr
+                ][factor].get("Yes"):
+                    entropy[attr][factor] = -(
+                        (
+                            self.summed_values[attr][factor]["No"]
+                            / self.summed_values[attr][factor]["total"]
+                        )
+                        * np.log2(
+                            self.summed_values[attr][factor]["No"]
+                            / self.summed_values[attr][factor]["total"]
+                        )
+                        + (
+                            self.summed_values[attr][factor]["Yes"]
+                            / self.summed_values[attr][factor]["total"]
+                        )
+                        * np.log2(
+                            self.summed_values[attr][factor]["Yes"]
+                            / self.summed_values[attr][factor]["total"]
+                        )
+                    )
+
+                elif self.summed_values[attr][factor].get(
+                    "No"
+                ) and not self.summed_values[attr][factor].get("Yes"):
+                    entropy[attr][factor] = -(
+                        (
+                            self.summed_values[attr][factor]["No"]
+                            / self.summed_values[attr][factor]["total"]
+                        )
+                        * np.log2(
+                            self.summed_values[attr][factor]["No"]
+                            / self.summed_values[attr][factor]["total"]
+                        )
+                    )
+
+                elif self.summed_values[attr][factor].get(
+                    "Yes"
+                ) and not self.summed_values[attr][factor].get("No"):
+                    entropy[attr][factor] = -(
+                        (
+                            self.summed_values[attr][factor]["Yes"]
+                            / self.summed_values[attr][factor]["total"]
+                        )
+                        * np.log2(
+                            self.summed_values[attr][factor]["Yes"]
+                            / self.summed_values[attr][factor]["total"]
+                        )
+                    )
+
+                gain[attr] = gain[attr] + (
+                    (self.summed_values[attr][factor]["total"] / num_values)
+                    * entropy[attr][factor]
                 )
-                / num_values
-            )
-            + (
-                self.summed_values["Air"]["Cool"]["Yes"]
-                + self.summed_values["Air"]["Warm"]["Yes"]
-            )
-            / num_values
-            * np.log2(
-                (
-                    self.summed_values["Air"]["Cool"]["Yes"]
-                    + self.summed_values["Air"]["Warm"]["Yes"]
-                )
-                / num_values
-            )
-        )
 
-        ent_air_cool = -(
-            (
-                self.summed_values["Air"]["Cool"]["No"]
-                / self.summed_values["Air"]["Cool"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Air"]["Cool"]["No"]
-                / self.summed_values["Air"]["Cool"]["total"]
-            )
-            + (
-                self.summed_values["Air"]["Cool"]["Yes"]
-                / self.summed_values["Air"]["Cool"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Air"]["Cool"]["Yes"]
-                / self.summed_values["Air"]["Cool"]["total"]
-            )
-        )
+            gain[attr] = ent_set - gain[attr]
 
-        ent_air_warm = -(
-            (
-                self.summed_values["Air"]["Warm"]["No"]
-                / self.summed_values["Air"]["Warm"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Air"]["Warm"]["No"]
-                / self.summed_values["Air"]["Warm"]["total"]
-            )
-            + (
-                self.summed_values["Air"]["Warm"]["Yes"]
-                / self.summed_values["Air"]["Warm"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Air"]["Warm"]["Yes"]
-                / self.summed_values["Air"]["Warm"]["total"]
-            )
-        )
+        print("Entropy:", entropy)
+        print("Gain:", gain)
+        print("Set entropy:", ent_set)
 
-        gain_air = ent_set - (
-            (self.summed_values["Air"]["Warm"]["total"] / num_values) * ent_air_warm
-            + (self.summed_values["Air"]["Cool"]["total"] / num_values) * ent_air_cool
-        )
+        # gain_air = ent_set - (
+        #     (self.summed_values["Air"]["Warm"]["total"] / num_values) * ent_air_warm
+        #     + (self.summed_values["Air"]["Cool"]["total"] / num_values) * ent_air_cool
+        # )
 
-        ent_fc_cloudy = -(
-            (
-                self.summed_values["Forecast"]["Cloudy"]["Yes"]
-                / self.summed_values["Forecast"]["Cloudy"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Forecast"]["Cloudy"]["Yes"]
-                / self.summed_values["Forecast"]["Cloudy"]["total"]
-            )
-        )
+        # gain_water = ent_set - (
+        #     (self.summed_values["Water"]["Cold"]["total"] / num_values) * ent_water_cold
+        #     + (self.summed_values["Water"]["Moderate"]["total"] / num_values)
+        #     * ent_water_mod
+        #     + (self.summed_values["Water"]["Warm"]["total"] / num_values)
+        #     * ent_water_warm
+        # )
 
-        ent_fc_rainy = -(
-            (
-                self.summed_values["Forecast"]["Rainy"]["No"]
-                / self.summed_values["Forecast"]["Rainy"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Forecast"]["Rainy"]["No"]
-                / self.summed_values["Forecast"]["Rainy"]["total"]
-            )
-            + (
-                self.summed_values["Forecast"]["Rainy"]["Yes"]
-                / self.summed_values["Forecast"]["Rainy"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Forecast"]["Rainy"]["Yes"]
-                / self.summed_values["Forecast"]["Rainy"]["total"]
-            )
-        )
+        # gain_wind = ent_set - (
+        #     (self.summed_values["Wind"]["Strong"]["total"] / num_values)
+        #     * ent_wind_strong
+        #     + (self.summed_values["Wind"]["Weak"]["total"] / num_values) * ent_wind_weak
+        # )
 
-        ent_fc_sunny = -(
-            (
-                self.summed_values["Forecast"]["Sunny"]["No"]
-                / self.summed_values["Forecast"]["Sunny"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Forecast"]["Sunny"]["No"]
-                / self.summed_values["Forecast"]["Sunny"]["total"]
-            )
-            + (
-                self.summed_values["Forecast"]["Sunny"]["Yes"]
-                / self.summed_values["Forecast"]["Sunny"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Forecast"]["Sunny"]["Yes"]
-                / self.summed_values["Forecast"]["Sunny"]["total"]
-            )
-        )
-
-        gain_fc = ent_set - (
-            (self.summed_values["Forecast"]["Cloudy"]["total"] / num_values)
-            * ent_fc_cloudy
-            + (self.summed_values["Forecast"]["Rainy"]["total"] / num_values)
-            * ent_fc_rainy
-            + (self.summed_values["Forecast"]["Sunny"]["total"] / num_values)
-            * ent_fc_sunny
-        )
-
-        ent_water_cold = -(
-            (
-                self.summed_values["Water"]["Cold"]["No"]
-                / self.summed_values["Water"]["Cold"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Water"]["Cold"]["No"]
-                / self.summed_values["Water"]["Cold"]["total"]
-            )
-            + (
-                self.summed_values["Water"]["Cold"]["Yes"]
-                / self.summed_values["Water"]["Cold"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Water"]["Cold"]["Yes"]
-                / self.summed_values["Water"]["Cold"]["total"]
-            )
-        )
-
-        ent_water_mod = -(
-            (
-                self.summed_values["Water"]["Moderate"]["No"]
-                / self.summed_values["Water"]["Moderate"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Water"]["Moderate"]["No"]
-                / self.summed_values["Water"]["Moderate"]["total"]
-            )
-            + (
-                self.summed_values["Water"]["Moderate"]["Yes"]
-                / self.summed_values["Water"]["Moderate"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Water"]["Moderate"]["Yes"]
-                / self.summed_values["Water"]["Moderate"]["total"]
-            )
-        )
-
-        ent_water_warm = -(
-            (
-                self.summed_values["Water"]["Warm"]["No"]
-                / self.summed_values["Water"]["Warm"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Water"]["Warm"]["No"]
-                / self.summed_values["Water"]["Warm"]["total"]
-            )
-            + (
-                self.summed_values["Water"]["Warm"]["Yes"]
-                / self.summed_values["Water"]["Warm"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Water"]["Warm"]["Yes"]
-                / self.summed_values["Water"]["Warm"]["total"]
-            )
-        )
-
-        gain_water = ent_set - (
-            (self.summed_values["Water"]["Cold"]["total"] / num_values) * ent_water_cold
-            + (self.summed_values["Water"]["Moderate"]["total"] / num_values)
-            * ent_water_mod
-            + (self.summed_values["Water"]["Warm"]["total"] / num_values)
-            * ent_water_warm
-        )
-
-        ent_wind_strong = -(
-            (
-                self.summed_values["Wind"]["Strong"]["No"]
-                / self.summed_values["Wind"]["Strong"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Wind"]["Strong"]["No"]
-                / self.summed_values["Wind"]["Strong"]["total"]
-            )
-            + (
-                self.summed_values["Wind"]["Strong"]["Yes"]
-                / self.summed_values["Wind"]["Strong"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Wind"]["Strong"]["Yes"]
-                / self.summed_values["Wind"]["Strong"]["total"]
-            )
-        )
-
-        ent_wind_weak = -(
-            (
-                self.summed_values["Wind"]["Weak"]["No"]
-                / self.summed_values["Wind"]["Weak"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Wind"]["Weak"]["No"]
-                / self.summed_values["Wind"]["Weak"]["total"]
-            )
-            + (
-                self.summed_values["Wind"]["Weak"]["Yes"]
-                / self.summed_values["Wind"]["Weak"]["total"]
-            )
-            * np.log2(
-                self.summed_values["Wind"]["Weak"]["Yes"]
-                / self.summed_values["Wind"]["Weak"]["total"]
-            )
-        )
-
-        gain_wind = ent_set - (
-            (self.summed_values["Wind"]["Strong"]["total"] / num_values)
-            * ent_wind_strong
-            + (self.summed_values["Wind"]["Weak"]["total"] / num_values) * ent_wind_weak
-        )
-
-        print(ent_set)
-        print(ent_air_cool)
-        print(ent_air_warm)
-        print(ent_fc_cloudy)
-        print(ent_fc_rainy)
-        print(ent_fc_sunny)
-        print(ent_water_cold)
-        print(ent_water_mod)
-        print(ent_water_warm)
-        print(ent_wind_strong)
-        print(ent_wind_weak)
-
-        print("gains")
-        print(gain_air)
-        print(gain_fc)
-        print(gain_water)
-        print(gain_wind)
+        # print("gains")
+        # print(gain_air)
+        # print(gain_fc)
+        # print(gain_water)
+        # print(gain_wind)
 
 
 if __name__ == "__main__":
@@ -371,7 +236,7 @@ if __name__ == "__main__":
     for attr in attributes["values"]:
         groups[attr] = pd.DataFrame(dataset.groupby([attr, "label"]).size())
         groups[attr].reset_index(inplace=True)
-    print(dataset)
+    # print(dataset)
 
     d = DecisionTree(attributes, dataset, classes, groups)
 
