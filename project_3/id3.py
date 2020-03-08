@@ -169,6 +169,18 @@ class DecisionTree:
 
         return poscount, negcount
 
+    def _get_pos_neg_counts_for_subset(self, raw, rows):
+        # Count pos/neg outcomes for key
+        poscount = 0
+        negcount = 0
+        for i, value in enumerate(rows):
+            if raw["label"][i] == self.data.positive_label:
+                poscount += 1
+            elif raw["label"][i] == self.data.negative_label:
+                negcount += 1
+
+        return poscount, negcount
+
     def _get_proportion_and_entropy_for_attr(self, attribute, bounds=None):
         raw = self.data.select(bounds)
         rows = raw[attribute]
@@ -219,7 +231,6 @@ class DecisionTree:
             proportions = self._get_proportion_and_entropy_for_attr(
                 attribute, boundary
             )
-            print(proportions)
 
             gains_to_calc = [total_entropy] + [
                 value["gain"] for value in proportions.values()
@@ -227,7 +238,6 @@ class DecisionTree:
 
             gainz[attribute] = chain_calls(gains_to_calc)
 
-        print(gainz)
         root_node = max(gainz, key=gainz.get)
         return root_node
 
@@ -264,7 +274,11 @@ class DecisionTree:
             for key in exclude_iter(self.data.dataset.keys(), ["label", node]):
                 boundary = AttributeBound(node, route)
                 data = self.data.select([boundary])
-                pos, neg = self._get_pos_neg_counts(data, data[key], key)
+                pos, neg = self._get_pos_neg_counts_for_subset(data, data[key])
+
+                if pos + neg == 1:
+                    self.tree.add_edge(node, "Yes")
+                    continue
 
                 entropy_for_set = self._set_entropy(pos, neg, pos + neg)
 
@@ -273,7 +287,7 @@ class DecisionTree:
                 )
                 self.tree.add_edge(node, next_node)
 
-        # self.fit(next_node)
+        self.fit(next_node)
 
     def show(self):
         plt.subplot(121)
