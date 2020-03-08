@@ -4,243 +4,288 @@
 # Dr. Greg Wolffe
 # ID3 decision tree creator
 
-import pandas as pd
 import numpy as np
-import pprint
+import networkx as nx
+import matplotlib.pyplot as plt
+import copy
+from collections import Counter
+from networkx import drawing
+from typing import Tuple, List
+
+
+def exclude_iter(iterable, values):
+    return [v for v in iterable if v not in values]
+
+
+def chain_calls(iterable, operation="sub"):
+    if operation == "sub":
+        return eval("-".join([str(i) for i in iterable]))
+    elif operation == "add":
+        return eval("+".join([str(i) for i in iterable]))
+
+
+class AttributeBound:
+    def __init__(self, parent, value):
+        self.parent = parent
+        self.value = value
+
+    def check_bounds(self, row: Tuple[str]):
+        return self.value in row
+
+    def __repr__(self):
+        return f"Attribute: {self.parent} Value: {self.value}"
+
+
+class Column:
+    def __init__(self, heading, count, values):
+        self.heading = heading
+        self.count = count
+        self.values = values
+
+    def __repr__(self):
+        return (
+            f"Heading: {self.heading}\n"
+            + f"Count: {self.count}\n"
+            + f"Values: {self.values}"
+        )
+
+
+class FishingDataLoader:
+    def __init__(self, filename):
+        with open(filename) as f:
+            f.readline()
+            self.classes = f.readline().rstrip().split(",")
+            n = int(f.readline().rstrip())
+
+            self.columns = []
+
+            for i in range(n):
+                line = f.readline().rstrip().split(",")
+                heading = line[0]
+                count = int(line[1])
+                values = line[2:]
+
+                self.columns.append(Column(heading, count, values))
+
+            n = int(f.readline().rstrip())
+            self.wind = []
+            self.water = []
+            self.air = []
+            self.forecast = []
+            self.label = []
+
+            for i in range(n):
+                line = f.readline().rstrip().split(",")
+                self.wind.append(line[0])
+                self.water.append(line[1])
+                self.air.append(line[2])
+                self.forecast.append(line[3])
+                self.label.append(line[4])
+
+            self.dataset = {
+                "wind": self.wind,
+                "water": self.water,
+                "air": self.air,
+                "forecast": self.forecast,
+                "label": self.label,
+            }
+            self.positive_label = "Yes"
+            self.negative_label = "No"
+
+    def __len__(self):
+        return len(self.dataset["wind"])
+
+    def to_iterator(self):
+        return zip(
+            self.dataset["wind"],
+            self.dataset["water"],
+            self.dataset["air"],
+            self.dataset["forecast"],
+            self.dataset["label"],
+        )
+
+    def select(self, bounds: List[AttributeBound] = None):
+        if bounds is None:
+            return self.dataset
+
+        dataset_copy = copy.deepcopy(self.dataset)
+        to_delete = []
+        for i in range(len(self)):
+            full_row = (
+                self.wind[i],
+                self.water[i],
+                self.air[i],
+                self.forecast[i],
+            )
+            for bound in bounds:
+                if not bound.check_bounds(full_row):
+                    to_delete.append(i)
+
+        for key in self.dataset.keys():
+            dataset_copy[key] = [
+                dataset_copy[key][v]
+                for v in range(len(dataset_copy[key]))
+                if v not in to_delete
+            ]
+
+        return dataset_copy
 
 
 class DecisionTree:
-    def __init__(self, attributes, dataset, classes, groups):
-        self.attributes = attributes
-        self.classes = classes
-        self.dataset = dataset
-        self.groups = groups
-        self.summed_values = self.grouping()
+    def __init__(self, filename):
+        self.total_positive = 0
+        self.total_negative = 0
+        self.total_entropy = 0
+        self.root_node = ""
+        self.tree = nx.Graph()
 
-    def _reindex(self, dicty_boi):
-        return {v: k for k, v in dicty_boi.items()}
+        self.data = FishingDataLoader(filename)
+        self.total_value_count = len(self.data)
 
-    def grouping(self):
-        summed_values = {k: {} for k in self.groups.keys()}
-        sums = []
-        for attr, df in self.groups.items():
-            change_indexes = []
-            hits = []
-            for index, row in df.iterrows():
-                if row[attr] not in hits:
-                    hits.append(row[attr])
-                    change_indexes.append(index)
+        self._set_pos_neg()
+        self._set_total_entropy()
+        self._set_root_node()
 
-            for index, group in enumerate(change_indexes):
+    def __repr__(self):
+        return (
+            f"nPos: {self.total_positive}\n"
+            + f"nNeg: {self.total_negative}\n"
+            + f"total entropy: {self.total_entropy}\n"
+            + f"root node: {self.root_node}"
+        )
 
-                if index + 1 < len(change_indexes):
-                    sums.append(
-                        (
-                            attr,
-                            hits[index],
-                            self._reindex(
-                                df.iloc[group : change_indexes[index + 1]]
-                                .set_index(0,)["label"]
-                                .to_dict(),
-                            ),
-                            df.iloc[group : change_indexes[index + 1]][0].sum(),
-                        )
-                    )
-                else:
-                    sums.append(
-                        (
-                            attr,
-                            hits[index],
-                            self._reindex(
-                                df.iloc[group:].set_index(0)["label"].to_dict()
-                            ),
-                            df.iloc[group:][0].sum(),
-                        )
-                    )
-        for sub in sums:
-            sub[2].update({"total": sub[3]})
+    def _get_gain(self, value, total, entropy):
+        return (value / total) * entropy
 
-            summed_values[sub[0]].update({sub[1]: sub[2]})
+    def _get_pos_neg_counts(self, raw, rows, key):
+        # Count pos/neg outcomes for key
+        poscount = 0
+        negcount = 0
+        for i, value in enumerate(rows):
+            if value == key and raw["label"][i] == self.data.positive_label:
+                poscount += 1
+            elif value == key and raw["label"][i] == self.data.negative_label:
+                negcount += 1
 
-        return summed_values
+        return poscount, negcount
 
-        # pp = pprint.PrettyPrinter(indent=4)
-        # pp.pprint(summed_values)
+    def _get_proportion_and_entropy_for_attr(self, attribute, bounds=None):
+        raw = self.data.select(bounds)
+        rows = raw[attribute]
+        attr_counts = Counter(rows)
+        total_counts = sum(attr_counts.values())
 
-    def fit(self):
-        entropy = {}
-        gain = {}
-        flag = 0
-        for attr in self.summed_values:
-            entropy[attr] = {}
-            gain[attr] = 0
-            for factor in range(0, len(self.summed_values[attr])):
+        key_pos_neg = {}
 
-                if flag == 0:
-                    ent_set = -(
-                        (
-                            self.summed_values[attr][factor]["No"]
-                            + self.summed_values[attr][factor + 1]["No"]
-                        )
-                        / num_values
-                        * np.log2(
-                            (
-                                self.summed_values[attr][factor]["No"]
-                                + self.summed_values[attr][factor + 1]["No"]
-                            )
-                            / num_values
-                        )
-                        + (
-                            self.summed_values[attr][factor]["Yes"]
-                            + self.summed_values[attr][factor + 1]["Yes"]
-                        )
-                        / num_values
-                        * np.log2(
-                            (
-                                self.summed_values[attr][factor]["Yes"]
-                                + self.summed_values[attr][factor + 1]["Yes"]
-                            )
-                            / num_values
-                        )
-                    )
+        for key in attr_counts.keys():
+            poscount, negcount = self._get_pos_neg_counts(raw, rows, key)
 
-                flag += 1
+            entropy = chain_calls(
+                [
+                    self._get_entropy(poscount, attr_counts[key]),
+                    self._get_entropy(negcount, attr_counts[key]),
+                ],
+                "add",
+            )
 
-                if self.summed_values[attr][factor].get("No") and self.summed_values[
-                    attr
-                ][factor].get("Yes"):
-                    entropy[attr][factor] = -(
-                        (
-                            self.summed_values[attr][factor]["No"]
-                            / self.summed_values[attr][factor]["total"]
-                        )
-                        * np.log2(
-                            self.summed_values[attr][factor]["No"]
-                            / self.summed_values[attr][factor]["total"]
-                        )
-                        + (
-                            self.summed_values[attr][factor]["Yes"]
-                            / self.summed_values[attr][factor]["total"]
-                        )
-                        * np.log2(
-                            self.summed_values[attr][factor]["Yes"]
-                            / self.summed_values[attr][factor]["total"]
-                        )
-                    )
+            key_pos_neg[key] = {
+                "pos": poscount,
+                "neg": negcount,
+                "entropy": entropy,
+                "gain": self._get_gain(
+                    poscount + negcount, total_counts, entropy
+                ),
+            }
 
-                elif self.summed_values[attr][factor].get(
-                    "No"
-                ) and not self.summed_values[attr][factor].get("Yes"):
-                    entropy[attr][factor] = -(
-                        (
-                            self.summed_values[attr][factor]["No"]
-                            / self.summed_values[attr][factor]["total"]
-                        )
-                        * np.log2(
-                            self.summed_values[attr][factor]["No"]
-                            / self.summed_values[attr][factor]["total"]
-                        )
-                    )
+        return key_pos_neg
 
-                elif self.summed_values[attr][factor].get(
-                    "Yes"
-                ) and not self.summed_values[attr][factor].get("No"):
-                    entropy[attr][factor] = -(
-                        (
-                            self.summed_values[attr][factor]["Yes"]
-                            / self.summed_values[attr][factor]["total"]
-                        )
-                        * np.log2(
-                            self.summed_values[attr][factor]["Yes"]
-                            / self.summed_values[attr][factor]["total"]
-                        )
-                    )
+    def _get_entropy(self, value, total):
+        if value == 0:
+            return 0
+        P = value / total
+        return -(P * np.log2(P))
 
-                gain[attr] = gain[attr] + (
-                    (self.summed_values[attr][factor]["total"] / num_values)
-                    * entropy[attr][factor]
+    def _find_next_node(
+        self,
+        total_entropy,
+        total_positive,
+        total_negative,
+        dataset,
+        boundary=None,
+    ):
+        gainz = {}
+
+        for attribute in exclude_iter(list(dataset.keys()), "label"):
+            proportions = self._get_proportion_and_entropy_for_attr(
+                attribute, boundary
+            )
+            print(proportions)
+
+            gains_to_calc = [total_entropy] + [
+                value["gain"] for value in proportions.values()
+            ]
+
+            gainz[attribute] = chain_calls(gains_to_calc)
+
+        print(gainz)
+        root_node = max(gainz, key=gainz.get)
+        return root_node
+
+    def _set_root_node(self):
+        self.root_node = self._find_next_node(
+            self.total_entropy,
+            self.total_positive,
+            self.total_negative,
+            self.data.dataset,
+        )
+        self.tree.add_node(self.root_node)
+
+    def _set_pos_neg(self):
+        for row in self.data.dataset["label"]:
+            if row == "Yes":
+                self.total_positive += 1
+            else:
+                self.total_negative += 1
+
+    def _set_entropy(self, pos, neg, total):
+        return self._get_entropy(pos, total) + self._get_entropy(neg, total)
+
+    def _set_total_entropy(self):
+        self.total_entropy = self._set_entropy(
+            self.total_positive, self.total_negative, self.total_value_count
+        )
+
+    def fit(self, node):
+        next_node = None
+        routes = list(set(self.data.dataset[node]))
+
+        for route in routes:
+            # Replace sunny with route
+            for key in exclude_iter(self.data.dataset.keys(), ["label", node]):
+                boundary = AttributeBound(node, route)
+                data = self.data.select([boundary])
+                pos, neg = self._get_pos_neg_counts(data, data[key], key)
+
+                entropy_for_set = self._set_entropy(pos, neg, pos + neg)
+
+                next_node = self._find_next_node(
+                    entropy_for_set, pos, neg, data, [boundary]
                 )
+                self.tree.add_edge(node, next_node)
 
-            gain[attr] = ent_set - gain[attr]
+        # self.fit(next_node)
 
-        print("Entropy:", entropy)
-        print("Gain:", gain)
-        print("Set entropy:", ent_set)
-
-        # gain_air = ent_set - (
-        #     (self.summed_values["Air"]["Warm"]["total"] / num_values) * ent_air_warm
-        #     + (self.summed_values["Air"]["Cool"]["total"] / num_values) * ent_air_cool
-        # )
-
-        # gain_water = ent_set - (
-        #     (self.summed_values["Water"]["Cold"]["total"] / num_values) * ent_water_cold
-        #     + (self.summed_values["Water"]["Moderate"]["total"] / num_values)
-        #     * ent_water_mod
-        #     + (self.summed_values["Water"]["Warm"]["total"] / num_values)
-        #     * ent_water_warm
-        # )
-
-        # gain_wind = ent_set - (
-        #     (self.summed_values["Wind"]["Strong"]["total"] / num_values)
-        #     * ent_wind_strong
-        #     + (self.summed_values["Wind"]["Weak"]["total"] / num_values) * ent_wind_weak
-        # )
-
-        # print("gains")
-        # print(gain_air)
-        # print(gain_fc)
-        # print(gain_water)
-        # print(gain_wind)
+    def show(self):
+        plt.subplot(121)
+        nx.draw(self.tree, with_labels=True, font_weight="bold")
+        plt.show()
 
 
 if __name__ == "__main__":
-    classes = {"count": 0, "values": []}
-    attributes = {"count": 0, "values": []}
+    d = DecisionTree("./fishing.txt")
+    d.fit(d.root_node)
+    d.show()
 
-    # Pandas dataframe to hold the dataset
-    dataset = None
-
-    with open("fishing_data.txt") as f:
-        # Get Output Classes
-        # Gets the number of values
-        classes["count"] = int(f.readline().rstrip())
-        # Strips \n and \r
-        classes = f.readline().rstrip().split(",")
-
-        # Get Attributes
-        attributes["count"] = int(f.readline().rstrip())
-
-        if attributes["count"] > 1:
-            for i in range(attributes["count"]):
-                attributes["values"].append(f.readline().rstrip().split(",")[0])
-
-        # Make Dataset
-        num_values = int(f.readline().rstrip())
-        list_of_values = []
-
-        for i in range(num_values):
-            values = f.readline().rstrip().split(",")
-            attributes_with_classification = attributes["values"] + ["label"]
-
-            dataframe = {}
-
-            for key, value in zip(attributes_with_classification, values):
-                dataframe[key] = value
-
-            list_of_values.append(dataframe)
-            dataframe = {}
-
-        dataset = pd.DataFrame(list_of_values)
-
-    groups = {}
-    for attr in attributes["values"]:
-        groups[attr] = pd.DataFrame(dataset.groupby([attr, "label"]).size())
-        groups[attr].reset_index(inplace=True)
-    # print(dataset)
-
-    d = DecisionTree(attributes, dataset, classes, groups)
-
-    d.fit()
 
 
 # calculate entropy for each factor of each individual attribute
