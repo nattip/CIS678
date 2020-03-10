@@ -277,7 +277,7 @@ class DecisionTree:
                 pos, neg = self._get_pos_neg_counts_for_subset(data, data[key])
 
                 if pos + neg == 1:
-                    self.tree.add_edge(node, "Yes")
+                    self.tree.add_edge(node, f"Yes{route}")
                     continue
 
                 entropy_for_set = self._set_entropy(pos, neg, pos + neg)
