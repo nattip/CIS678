@@ -1,0 +1,14 @@
+strict digraph "" {
+	Forecast -> Wind;
+	Forecast -> Yes1;
+	Forecast -> Air;
+	Wind -> Yes2;
+	Wind -> Water;
+	Air -> No1;
+	Air -> wind;
+	Water -> No2;
+	Water -> Yes3;
+	Water -> No3;
+	wind -> Yes4;
+	wind -> No4;
+}

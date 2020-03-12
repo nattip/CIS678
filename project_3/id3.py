@@ -204,9 +204,7 @@ class DecisionTree:
                 "pos": poscount,
                 "neg": negcount,
                 "entropy": entropy,
-                "gain": self._get_gain(
-                    poscount + negcount, total_counts, entropy
-                ),
+                "gain": self._get_gain(poscount + negcount, total_counts, entropy),
             }
 
         return key_pos_neg
@@ -218,19 +216,12 @@ class DecisionTree:
         return -(P * np.log2(P))
 
     def _find_next_node(
-        self,
-        total_entropy,
-        total_positive,
-        total_negative,
-        dataset,
-        boundary=None,
+        self, total_entropy, total_positive, total_negative, dataset, boundary=None,
     ):
         gainz = {}
 
         for attribute in exclude_iter(list(dataset.keys()), "label"):
-            proportions = self._get_proportion_and_entropy_for_attr(
-                attribute, boundary
-            )
+            proportions = self._get_proportion_and_entropy_for_attr(attribute, boundary)
 
             gains_to_calc = [total_entropy] + [
                 value["gain"] for value in proportions.values()
@@ -277,7 +268,7 @@ class DecisionTree:
                 pos, neg = self._get_pos_neg_counts_for_subset(data, data[key])
 
                 if pos + neg == 1:
-                    self.tree.add_edge(node, "Yes")
+                    self.tree.add_edge(node, f"Yes{route}")
                     continue
 
                 entropy_for_set = self._set_entropy(pos, neg, pos + neg)
@@ -296,14 +287,69 @@ class DecisionTree:
 
 
 if __name__ == "__main__":
-    d = DecisionTree("./fishing.txt")
+    d = DecisionTree("./fishing_data.txt")
     d.fit(d.root_node)
     d.show()
 
+# import networkx as nx
+# from networkx.drawing.nx_agraph import graphviz_layout
+# import matplotlib.pyplot as plt
+
+# G = nx.DiGraph()
+
+# G.add_node("Forecast")
+
+# G.add_node("Wind")
+# G.add_node("Yes1")
+# G.add_node("Air")
+# G.add_node("Yes2")
+# G.add_node("Water")
+# G.add_node("No1")
+# G.add_node("wind")
+# G.add_node("No2")
+# G.add_node("Yes3")
+# G.add_node("No3")
+# G.add_node("Yes4")
+# G.add_node("No4")
 
 
-# calculate entropy for each factor of each individual attribute
-# calculate gain for each attribute
-# find largest gain
-# recurse and recalculate from dataset without data from given node
+# G.add_edge("Forecast", "Wind")
+# G.add_edge("Forecast", "Yes1")
+# G.add_edge("Forecast", "Air")
+# G.add_edge("Wind", "Yes2")
+# G.add_edge("Wind", "Water")
+# G.add_edge("Air", "No1")
+# G.add_edge("Air", "wind")
+# G.add_edge("Water", "No2")
+# G.add_edge("Water", "Yes3")
+# G.add_edge("Water", "No3")
+# G.add_edge("wind", "Yes4")
+# G.add_edge("wind", "No4")
 
+# # write dot file to use with graphviz
+# # run "dot -Tpng test.dot >test.png"
+# nx.nx_agraph.write_dot(G, "test.dot")
+
+# # same layout using matplotlib with no labels
+# plt.title("ID3 Decision Tree")
+# pos = graphviz_layout(G, prog="dot")
+# nx.draw(G, pos, with_labels=True, arrows=True)
+# nx.draw_networkx_edge_labels(
+#     G,
+#     pos,
+#     edge_labels={
+#         ("Forecast", "Wind"): "Sunny",
+#         ("Forecast", "Yes1"): "Cloudy",
+#         ("Forecast", "Air"): "Rainy",
+#         ("Wind", "Yes2"): "Strong",
+#         ("Wind", "Water"): "Weak",
+#         ("Air", "No1"): "Cool",
+#         ("Air", "wind"): "Warm",
+#         ("Water", "No2"): "Cold",
+#         ("Water", "Yes3"): "Moderate",
+#         ("Water", "No3"): "Warm",
+#         ("wind", "Yes4"): "Strong",
+#         ("wind", "No4"): "Weak",
+#     },
+# )
+# plt.show("nx_test.png")
