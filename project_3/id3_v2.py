@@ -8,7 +8,8 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 import copy
-from networkx import drawing
+import pprint
+
 
 ##########################################################################
 # read in metadata from data set then all lines of data
@@ -147,9 +148,8 @@ def find_root_node():
     )
 
     root = max(gain, key=gain.get)
-    tree[root] = attr[root]
     print("Root node =", root)
-
+    tree[root] = {}
     return root, entropy
 
 
@@ -166,6 +166,7 @@ def find_next_node(node, counts, numData, attr, numClasses, entropy, data):
         temp_data = {}
         temp_factors = []
         bounds = []
+        tree[root][branch] = {}
 
         # list of the factors that a data point needs
         # to be included down the branch
@@ -204,8 +205,16 @@ def find_next_node(node, counts, numData, attr, numClasses, entropy, data):
         # if a factor only exist as one classification, end node
         # with classification label
         if zeros == (numClasses - 1):
-            print("Next node =", pos_factor)
-            # tree[root][branch] = pos_factor
+            next_node = pos_factor
+            print("Next node =", next_node)
+            if not tree[root][branch]:
+                # print(tree[root][branch])
+                tree[root][branch] = next_node
+            else:
+                # print(tree[root][branch])
+                tree[root][branch + "1"] = next_node
+            # tree[root][branch] = next_node
+
             continue
 
         # determine set entropy, factor entropies, and gain
@@ -224,8 +233,15 @@ def find_next_node(node, counts, numData, attr, numClasses, entropy, data):
         # decide next node
         next_node = max(temp_gain, key=temp_gain.get)
         print("Next node =", next_node)
-        # tree[root][branch] = next_node
 
+        if not tree[root][branch]:
+            # print(tree[root][branch])
+            tree[root][branch] = next_node
+        else:
+            # print(tree[root][branch])
+            tree[root][branch + "1"] = next_node
+
+        print(tree)
         # call function again to find next node given
         # current information
         find_next_node(
@@ -239,6 +255,7 @@ def find_next_node(node, counts, numData, attr, numClasses, entropy, data):
         )
 
 
+##########################################################################
 ##########################################################################
 
 # global structures
@@ -265,5 +282,6 @@ if __name__ == "__main__":
 
     # build entire tree
     find_next_node(root, factor_counts, numData, attr, numClasses, entropy, data)
+
     print(tree)
 
