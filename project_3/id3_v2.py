@@ -213,7 +213,6 @@ def find_next_node(node, counts, numData, attr, numClasses, entropy, data):
             else:
                 # print(tree[root][branch])
                 tree[root][branch + "1"] = next_node
-            # tree[root][branch] = next_node
 
             continue
 
@@ -241,7 +240,10 @@ def find_next_node(node, counts, numData, attr, numClasses, entropy, data):
             # print(tree[root][branch])
             tree[root][branch + "1"] = next_node
 
+        print("\n")
         print(tree)
+        print("\n")
+
         # call function again to find next node given
         # current information
         find_next_node(
@@ -269,7 +271,7 @@ tree = {}
 if __name__ == "__main__":
     # open and read data
     numClasses, classes, numAttr, factors, attr, numData, data = open_data(
-        "./fishing_data.txt"
+        "./contact_data.txt"
     )
 
     # count up intial occurrences of each class
@@ -283,5 +285,6 @@ if __name__ == "__main__":
     # build entire tree
     find_next_node(root, factor_counts, numData, attr, numClasses, entropy, data)
 
+    print("\n")
     print(tree)
 
