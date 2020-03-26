@@ -21,7 +21,7 @@ class neuralNet:
         return x*(1-x)
 
     def foreward(self, inputs):
-        pass
+        return self.sigmoid(dot(inputs, self.weights))
 
     def train(self, training_inputs, targets, iterations):
         for iteration in iterations:
@@ -29,7 +29,7 @@ class neuralNet:
 
             error = targets - output
 
-            grad = dot(training_inputs.T, error * self.d_sigmoid(output))
+            grad = dot(training_inputs.T, error * self.deriv_sigmoid(output))
 
             self.weights += grad
 
@@ -41,5 +41,5 @@ if __name__ == "__main__":
     nn.train(inputs,targets,100)
 
     print(f"weights: {nn.weights}")
-    
+
 
