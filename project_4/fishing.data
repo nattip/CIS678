@@ -1,11 +1,3 @@
-2
-Yes,No
-4
-Wind,2,Strong,Weak
-Water,3,Warm,Moderate,Cold
-Air,2,Warm,Cool
-Forecast,3,Sunny,Cloudy,Rainy
-14
 Strong,Warm,Warm,Sunny,Yes
 Weak,Warm,Warm,Sunny,No
 Strong,Warm,Warm,Cloudy,Yes
