@@ -16,12 +16,21 @@ class NeuralNet:
         self.n_hidden = 50
         self.lr = 0.0001
 
-        self.weights_hidden = random.normal(0, 1, (inputs.shape[1], self.n_hidden))
+        self.weights_hidden = random.normal(
+            0, 1, (inputs.shape[1], self.n_hidden)
+        )
         self.bias_hidden = np.zeros(self.n_hidden)
 
         self.n_output = n_outputs
+<<<<<<< HEAD
         # print(self.n_output, n_outputs)
         self.weights_output = random.normal(0, 1, (self.n_hidden, self.n_output))
+=======
+        print(self.n_output, n_outputs)
+        self.weights_output = random.normal(
+            0, 1, (self.n_hidden, self.n_output)
+        )
+>>>>>>> f01b52a87dbd5f8e1960bdfb18f05e2179ca4eb0
         self.bias_output = np.zeros(self.n_output)
 
     def encode_targets(self, targets, n_classes):
@@ -40,7 +49,9 @@ class NeuralNet:
         hidden_out = dot(inputs, self.weights_hidden) + self.bias_hidden
         hidden_sigmoid = self.sigmoid(hidden_out)
 
-        output_out = dot(hidden_sigmoid, self.weights_output) + self.bias_output
+        output_out = (
+            dot(hidden_sigmoid, self.weights_output) + self.bias_output
+        )
         output_sigmoid = self.sigmoid(output_out)
 
         return hidden_sigmoid, output_sigmoid
@@ -53,7 +64,13 @@ class NeuralNet:
             delta_output = output_sigmoid - targets
 
             deriv_sig_hidden = self.deriv_sigmoid(hidden_sigmoid)
+<<<<<<< HEAD
             delta_hidden = dot(delta_output, self.weights_output.T) * deriv_sig_hidden
+=======
+            delta_hidden = (
+                dot(delta_output, self.weights_output.T) * deriv_sig_hidden
+            )
+>>>>>>> f01b52a87dbd5f8e1960bdfb18f05e2179ca4eb0
 
             grad_weight_hidden = dot(training_inputs.T, delta_hidden)
             grad_bias_hidden = np.sum(delta_hidden, axis=0)
@@ -88,7 +105,9 @@ if __name__ == "__main__":
                 inputs = array([line.rstrip().split(" ")[:-1]])
                 flag = 1
             else:
-                targets = np.append(targets, array([line.rstrip().split(" ").pop()]))
+                targets = np.append(
+                    targets, array([line.rstrip().split(" ").pop()])
+                )
                 inputs = np.concatenate(
                     (inputs, array([line.rstrip().split(" ")[:-1]]))
                 )
@@ -101,7 +120,11 @@ if __name__ == "__main__":
     n_features = inputs.shape[1]
 
     nn = NeuralNet()
+<<<<<<< HEAD
     nn.train(inputs, targets, 10000)
+=======
+    nn.train(inputs, targets, 100)
+>>>>>>> f01b52a87dbd5f8e1960bdfb18f05e2179ca4eb0
 
     with open("./digits-test.data") as f:
         lines = f.readlines()
@@ -123,6 +146,7 @@ if __name__ == "__main__":
     inputs_test = array(inputs_test, dtype=np.float64)
     targets_test = array(targets_test, dtype=np.float64)
 
+<<<<<<< HEAD
     predictions = nn.test(inputs_test)
     correct = 0
     incorrect = 0
@@ -136,3 +160,6 @@ if __name__ == "__main__":
     print(f"incorrect: {incorrect}")
     print(Counter(predictions))
     print(predictions)
+=======
+    print(Counter(nn.test(inputs_test)))
+>>>>>>> f01b52a87dbd5f8e1960bdfb18f05e2179ca4eb0
