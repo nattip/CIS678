@@ -159,12 +159,17 @@ if __name__ == "__main__":
     # initalize number correct and number incorrect
     correct = 0
     incorrect = 0
+    correct_dig = {}
+
+    for out in class_labels:
+        correct_dig[out] = 0
 
     # compare all predictions to the targets from the test set
     # and count how many were right/wrong
     for value in range(len(predictions)):
         if predictions[value] == targets_test[value]:
             correct += 1
+            correct_dig[predictions[value]] += 1
         else:
             incorrect += 1
 
@@ -172,28 +177,33 @@ if __name__ == "__main__":
     accuracy = 100 * (correct / (correct + incorrect))
 
     percent_error = {}
+    incorrect_dig = {}
+
+    # calculate percent error for each digit and sum the number
+    # of times each digit was incorrectly predicted
     for value in class_labels:
         # exp-theo/theo
         percent_error[value] = round(
             100
-            * (Counter(predictions)[value] - Counter(targets_test)[value])
+            * (correct_dig[value] - Counter(targets_test)[value])
             / Counter(targets_test)[value],
             2,
         )
 
+        incorrect_dig[value] = Counter(predictions)[value] - correct_dig[value]
+
     # print results
     print(f"Number correct: {correct}")
     print(f"Number incorrect: {incorrect}")
-    print(f"Accuracy: {round(accuracy, 2)}")
-    print(f"Number of predictions for each digit: {Counter(predictions)}")
-    print(f"Actual number of digits in test set: {Counter(targets_test)}")
+    print(f"Accuracy: {round(accuracy, 2)}%")
+    print(f"Number of incorrect predictions per digit:\n{incorrect_dig}")
 
     # create bar plot of percent errors for each digit
     bar = plt.bar(*zip(*percent_error.items()))
 
     # change color of 2 digits with highest errors
-    bar[7].set_color("r")
-    bar[1].set_color("y")
+    bar[8].set_color("r")
+    bar[9].set_color("y")
 
     # label plot
     plt.ylabel("Percent Error")
